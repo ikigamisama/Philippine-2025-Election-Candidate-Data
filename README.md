@@ -22,10 +22,10 @@ This project focuses on collecting, cleaning, and modeling candidate information
 - Normalize data fields (e.g., name, party, position, district).
 - Clean and validate extracted text using regex and transformation logic.
 
-### 4. Data Organization & Storage
+### 4. Data Organization & Storage (`merge.py`)
 
 - Save cleaned candidate data into CSV files per district.
-- Compile all district files into a unified master dataset.
+- Merge all district files into a unified master dataset.
 
 ---
 

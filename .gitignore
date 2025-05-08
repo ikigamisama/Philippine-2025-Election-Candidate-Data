@@ -1,0 +1,7 @@
+csv/*
+html/*
+pdf/*
+
+!csv/.gitkeep
+!html/.gitkeep
+!pdf/.gitkeep

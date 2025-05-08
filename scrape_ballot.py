@@ -99,9 +99,11 @@ if __name__ == "__main__":
             region_site = f'https://comelec.gov.ph/html-tpls/2025NLE/2025BallotFace/{regional.get("href").split("/")[-1]}.html'
             regional_soup = asyncio.run(
                 extract_scrape_content(region_site, '.body-content'))
-            print(F"Scraping Regional: {region_site}")
+            print(F"Scraping Regional: {region_site.replace('.html', '/')}")
             if regional_soup.find('table'):
                 for district in regional_soup.find_all('li', class_="tb"):
+                    print(
+                        f"Downloading: 'https://comelec.gov.ph/{district.find('a').get('href').replace(to_replace, replace_with)}")
                     download_pdf(f'./pdf/{regional.get("href").split("/")[-1]}/', 'https://comelec.gov.ph/'+district.find('a').get(
                         'href').replace(to_replace, replace_with), district.find('a').get('href').split('/')[-1].replace(to_replace, replace_with))
             else:
@@ -110,6 +112,8 @@ if __name__ == "__main__":
                         f"./pdf/{regional.get('href').split('/')[-1].replace(to_replace, replace_with)}/{province.find('span', class_='tb').getText().replace(to_replace, replace_with)}", exist_ok=True)
 
                     for prov_district in province.find_all('li'):
+                        print(
+                            f"Downloading: 'https://comelec.gov.ph/{prov_district.find('a').get('href').replace(to_replace, replace_with)}")
                         download_pdf(f"./pdf/{regional.get('href').split('/')[-1].replace(to_replace, replace_with)}/{province.find('span', class_='tb').getText().replace(to_replace, replace_with)}/",
                                      'https://comelec.gov.ph/'+prov_district.find('a').get('href').replace(to_replace, replace_with), prov_district.find('a').get('href').split('/')[-1].replace(to_replace, replace_with))
 

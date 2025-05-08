@@ -21,21 +21,24 @@ already_file = ["LAV.pdf", "OV.pdf", "LAV.csv", "OV.csv"]
 
 
 # Step 1. PDF to HTML Convert
-doc = PdfDocument()
 
-pdf_file_list = get_file_path_list('./pdf', '.pdf')
-for pdf in pdf_file_list:
-    html_path = "./html/" + pdf.replace('./pdf\\', '').split('\\')[0]
-    save_path = "./html/" + pdf.replace('./pdf\\', '').replace('.pdf', '.html')
 
-    if pdf.replace('./pdf\\', '') not in already_file:
-        os.makedirs(html_path, exist_ok=True)
+# doc = PdfDocument()
 
-    doc.LoadFromFile(pdf)
-    convertOptions = doc.ConvertOptions
-    convertOptions.SetPdfToHtmlOptions(True, True, 1, True)
-    doc.SaveToFile(save_path, FileFormat.HTML)
-    doc.Dispose()
+# pdf_file_list = get_file_path_list('./pdf', '.pdf')
+# for pdf in pdf_file_list:
+#     html_path = "./html/" + pdf.replace('./pdf\\', '').split('\\')[0]
+#     save_path = "./html/" + pdf.replace('./pdf\\', '').replace('.pdf', '.html')
+
+#     if pdf.replace('./pdf\\', '') not in already_file:
+#         os.makedirs(html_path, exist_ok=True)
+
+#     print(f"Converting PDF TO HTML: {save_path}")
+#     doc.LoadFromFile(pdf)
+#     convertOptions = doc.ConvertOptions
+#     convertOptions.SetPdfToHtmlOptions(True, True, 1, True)
+#     doc.SaveToFile(save_path, FileFormat.HTML)
+#     doc.Dispose()
 
 
 # Step 2. HTML file to Web Scrape and Data Ingestion
@@ -104,10 +107,12 @@ for html in html_file_list:
     positions_nationwide = []
     candidates_nationwide = []
     district_nationwide = []
+    political_party_nationwide = []
 
     positions_local = []
     candidates_local = []
     district_local = []
+    political_party_local = []
 
     for header, candidate in sections.items():
         position = None
@@ -140,24 +145,46 @@ for html in html_file_list:
 
             if html.replace('./html\\', '').replace('.html', '') in ['LAV', 'OV'] and position.strip() in ['SENATOR', 'PARTY LIST']:
                 positions_nationwide.append(position.strip())
-                candidates_nationwide.append(cleaned)
+
+                if position.strip() == "PARTY LIST":
+                    candidates_nationwide.append(cleaned)
+                    political_party_nationwide.append(np.nan)
+                else:
+                    candidates_nationwide.append(cleaned.split('(')[0].strip())
+                    political_party_nationwide.append(
+                        cleaned.split('(')[1].replace(")", "").strip())
+
                 district_nationwide.append(np.nan)
             elif html.replace('./html\\', '').replace('.html', '') not in ['LAV', 'OV'] and position.strip() not in ['SENATOR', 'PARTY LIST']:
                 if cleaned and cleaned[0] not in ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']:
                     positions_local.append(position.strip())
-                    candidates_local.append(cleaned)
+                    if '(' in cleaned and ')' in cleaned:
+                        candidates_local.append(cleaned.split('(')[0].strip())
+                        political_party_local.append(
+                            cleaned.split('(')[1].replace(")", "").strip())
+                    else:
+                        candidates_local.append(cleaned.strip())
+                        political_party_local.append('IND')
                     district_local.append(html.replace(
                         './html\\', '').replace('.html', ''))
 
     # Step 4. Save as CSV file
     if html.replace('./html\\', '').replace('.html', '') in ['LAV', 'OV']:
-        df = pd.DataFrame({'position': positions_nationwide,
-                          'candidate': candidates_nationwide, 'district': district_nationwide})
+        df = pd.DataFrame({
+            'position': positions_nationwide,
+            'candidate': candidates_nationwide,
+            'party': political_party_nationwide,
+            'district': district_nationwide
+        })
         df.to_csv(html.replace(
             './html', './csv').replace('.html', '.csv'), index=False)
     else:
-        df = pd.DataFrame({'position': positions_local,
-                          'candidate': candidates_local, 'district': district_local})
+        df = pd.DataFrame({
+            'position': positions_local,
+            'candidate': candidates_local,
+            'party': political_party_local,
+            'district': district_local
+        })
         df.to_csv(html.replace(
             './html', './csv').replace('.html', '.csv'), index=False)
 
